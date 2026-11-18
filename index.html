@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuoteFlow AI</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--ink:#F2F5F8;--muted:#A3AFBC;--card:#0D1218;--line:#232D38;--y:#F5C400;--navy:#0F2A43}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.w{max-width:960px;margin:0 auto;padding:0 16px}
+h1,h2{margin:0 0 12px}h2{font-size:22px}
+input,select,button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+button{cursor:pointer}.p{background:var(--y);color:var(--navy);border:0;font-weight:700}
+.x{padding:9px 12px;color:var(--muted)}
+:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+.box{max-width:380px;margin:12vh auto;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+.box form{display:grid;gap:10px}.box h1{font-size:24px}
+.msg{color:var(--y);font-size:14px;min-height:20px}
+header{border-bottom:1px solid var(--line)}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}
+.top b{margin-inline-end:auto;font-size:18px}
+.tabs{display:flex;gap:6px;padding:12px 0;overflow-x:auto}
+.tabs button.on{background:var(--y);color:var(--navy);border:0;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.st small{color:var(--muted);display:block}.st b{font-size:22px}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:16px}
+.ir{display:grid;grid-template-columns:110px 1fr 70px 90px 40px;gap:6px;margin-bottom:6px}
+.li{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
+.li>span:first-child{flex:1 1 200px}.li small{color:var(--muted);display:block}
+.tt{text-align:end;margin:10px 0;font-variant-numeric:tabular-nums}
+.tt b{font-size:20px}
+.empty{color:var(--muted);padding:24px 0}
+@media (max-width:560px){.ir{grid-template-columns:1fr 1fr 40px}.ir input:nth-child(2){grid-column:1/-1;order:-1}}
+</style>
+</head>
+<body>
+<div id="auth" class="box" hidden>
+<h1>QuoteFlow AI</h1>
+<form id="af">
+<input id="em" type="email" required autocomplete="email" placeholder="Email">
+<input id="pw" type="password" required minlength="6" autocomplete="current-password" placeholder="Password">
+<button class="p" id="go"></button>
+<button type="button" id="sw"></button>
+<select id="al"><option value="en">English</option><option value="fr">Français</option></select>
+<div class="msg" id="am" role="status"></div>
+</form>
+</div>
+<div id="app" hidden>
+<header><div class="w"><div class="top"><b>QuoteFlow AI</b><select id="hl"><option value="en">English</option><option value="fr">Français</option></select><button id="lo"></button></div>
+<div class="tabs" id="tabs"></div></div></header>
+<main class="w" id="view" style="padding-top:20px;padding-bottom:40px"></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.9"></script>
+<script>
+// Colle ici les deux valeurs de Supabase (Project Settings > API).
+const SUPABASE_URL = "https://xyrlikxuqygypekrefgq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_PP77mkgp_7BzTj3G-1vQcQ_TWXBsycP"; // clé publique, faite pour être dans le code
+
+const L = {
+en:{signin:"Sign in",signup:"Create account",toup:"No account? Create one",toin:"Have an account? Sign in",check:"Check your email to confirm your account, then sign in.",dash:"Dashboard",customers:"Customers",quotes:"Quotes",logout:"Sign out",nq:"Quotes",nc:"Customers",tv:"Total quoted",av:"Accepted",pe:"Waiting for answer",name:"Name",phone:"Phone",add:"Add",del:"Delete",none:"Nothing here yet.",nw:"New quote",title:"Job title",cust:"Customer",nocust:"No customer",cur:"Currency",tax:"Tax %",labor:"Labor",material:"Material",desc:"Description",item:"Add line",save:"Save quote",sub:"Subtotal",total:"Total",draft:"Draft",sent:"Sent",accepted:"Accepted",declined:"Declined",ask:"Delete this item?",err:"Something went wrong. Try again.",cfg:"Add your Supabase URL and key in index.html first."},
+fr:{signin:"Se connecter",signup:"Créer un compte",toup:"Pas de compte ? Créer un compte",toin:"Déjà un compte ? Se connecter",check:"Vérifiez votre email pour confirmer le compte, puis connectez-vous.",dash:"Tableau de bord",customers:"Clients",quotes:"Devis",logout:"Déconnexion",nq:"Devis",nc:"Clients",tv:"Total des devis",av:"Acceptés",pe:"En attente de réponse",name:"Nom",phone:"Téléphone",add:"Ajouter",del:"Supprimer",none:"Rien pour l’instant.",nw:"Nouveau devis",title:"Titre du chantier",cust:"Client",nocust:"Aucun client",cur:"Devise",tax:"Taxe %",labor:"Main-d’œuvre",material:"Matériel",desc:"Description",item:"Ajouter une ligne",save:"Enregistrer le devis",sub:"Sous-total",total:"Total",draft:"Brouillon",sent:"Envoyé",accepted:"Accepté",declined:"Refusé",ask:"Supprimer cet élément ?",err:"Une erreur est survenue. Réessayez.",cfg:"Ajoutez d’abord votre URL et votre clé Supabase dans index.html."}
+};
+let lang = "en"; try { lang = localStorage.getItem("qf-lang") || "en"; } catch (e) {}
+if (!L[lang]) lang = "en";
+const t = k => L[lang][k] || L.en[k];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = (v, c) => new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US", {style:"currency", currency:c || "USD"}).format(v || 0);
+const r2 = n => Math.round(n * 100) / 100;
+
+const configured = !SUPABASE_URL.startsWith("PASTE");
+const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let customers = [], quotes = [], tab = "dash", signup = false, items = [];
+
+function setLang(l) { lang = l; try { localStorage.setItem("qf-lang", l); } catch (e) {} paintAuth(); if (!$("#app").hidden) { paintNav(); view(); } }
+function paintAuth() {
+  $("#go").textContent = signup ? t("signup") : t("signin");
+  $("#sw").textContent = signup ? t("toin") : t("toup");
+  $("#pw").autocomplete = signup ? "new-password" : "current-password";
+  $("#al").value = lang; $("#hl").value = lang; document.documentElement.lang = lang;
+}
+function paintNav() {
+  $("#lo").textContent = t("logout");
+  $("#tabs").innerHTML = ["dash","customers","quotes"].map(k => `<button data-tab="${k}" class="${tab === k ? "on" : ""}">${t(k)}</button>`).join("");
+}
+function authMsg(m) { $("#am").textContent = m; }
+
+$("#af").onsubmit = async e => {
+  e.preventDefault();
+  if (!configured) return authMsg(t("cfg"));
+  authMsg("");
+  const cred = {email: $("#em").value.trim(), password: $("#pw").value};
+  const r = signup ? await sb.auth.signUp(cred) : await sb.auth.signInWithPassword(cred);
+  if (r.error) return authMsg(r.error.message);
+  if (signup && !r.data.session) authMsg(t("check"));
+};
+$("#sw").onclick = () => { signup = !signup; authMsg(""); paintAuth(); };
+$("#al").onchange = e => setLang(e.target.value);
+$("#hl").onchange = e => setLang(e.target.value);
+$("#lo").onclick = () => sb.auth.signOut();
+$("#tabs").onclick = e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; paintNav(); view(); } };
+
+async function load() {
+  const [c, q] = await Promise.all([
+    sb.from("customers").select("*").order("name"),
+    sb.from("quotes").select("*").order("created_at", {ascending:false})
+  ]);
+  customers = c.data || []; quotes = q.data || [];
+}
+async function start() { $("#auth").hidden = true; $("#app").hidden = false; paintNav(); await load(); view(); }
+
+function sumBy(filter) {
+  const m = {};
+  quotes.filter(filter).forEach(q => { m[q.currency] = (m[q.currency] || 0) + Number(q.total); });
+  const s = Object.entries(m).map(([c, v]) => money(v, c)).join(", ");
+  return s || money(0, "USD");
+}
+function view() {
+  const v = $("#view");
+  if (tab === "dash") {
+    v.innerHTML = `<h2>${t("dash")}</h2><div class="stats">
+    <div class="st"><small>${t("nq")}</small><b>${quotes.length}</b></div>
+    <div class="st"><small>${t("nc")}</small><b>${customers.length}</b></div>
+    <div class="st"><small>${t("tv")}</small><b>${esc(sumBy(() => true))}</b></div>
+    <div class="st"><small>${t("av")}</small><b>${esc(sumBy(q => q.status === "accepted"))}</b></div>
+    <div class="st"><small>${t("pe")}</small><b>${quotes.filter(q => q.status === "sent").length}</b></div></div>`;
+  } else if (tab === "customers") {
+    v.innerHTML = `<h2>${t("customers")}</h2>
+    <form class="f" id="cf"><input id="cn" required placeholder="${t("name")}"><input id="ce" type="email" placeholder="Email"><input id="cp" placeholder="${t("phone")}"><button class="p">${t("add")}</button></form>
+    ${customers.length ? customers.map(c => `<div class="li"><span>${esc(c.name)}<small>${esc([c.email, c.phone].filter(Boolean).join(", "))}</small></span><button class="x" data-dc="${c.id}">${t("del")}</button></div>`).join("") : `<div class="empty">${t("none")}</div>`}`;
+  } else {
+    if (!items.length) items = [{kind:"labor", d:"", q:1, p:0}];
+    const names = Object.fromEntries(customers.map(c => [c.id, c.name]));
+    v.innerHTML = `<h2>${t("nw")}</h2>
+    <form id="qf"><div class="f"><input id="qt" required placeholder="${t("title")}">
+    <select id="qc"><option value="">${t("nocust")}</option>${customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+    <select id="qu"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option></select>
+    <input id="qx" type="number" min="0" step="any" value="0" aria-label="${t("tax")}" placeholder="${t("tax")}"></div>
+    <div id="items"></div><button type="button" id="ai">${t("item")}</button>
+    <div class="tt" id="tt"></div><button class="p">${t("save")}</button></form>
+    <h2 style="margin-top:32px">${t("quotes")}</h2>
+    ${quotes.length ? quotes.map(q => `<div class="li"><span>Q-${String(q.number).padStart(4, "0")} ${esc(q.title)}<small>${esc(names[q.customer_id] || "")} ${new Date(q.created_at).toLocaleDateString(lang)}</small></span><b>${money(q.total, q.currency)}</b>
+    <select data-st="${q.id}">${["draft","sent","accepted","declined"].map(s => `<option value="${s}"${q.status === s ? " selected" : ""}>${t(s)}</option>`).join("")}</select>
+    <button class="x" data-dq="${q.id}">${t("del")}</button></div>`).join("") : `<div class="empty">${t("none")}</div>`}`;
+    rows(); totals();
+  }
+}
+function rows() {
+  $("#items").innerHTML = items.map((it, i) => `<div class="ir"><select data-i="${i}" data-f="kind"><option value="labor"${it.kind === "labor" ? " selected" : ""}>${t("labor")}</option><option value="material"${it.kind === "material" ? " selected" : ""}>${t("material")}</option></select>
+  <input data-i="${i}" data-f="d" placeholder="${t("desc")}" value="${esc(it.d)}"><input data-i="${i}" data-f="q" type="number" min="0" step="any" value="${it.q}"><input data-i="${i}" data-f="p" type="number" min="0" step="any" value="${it.p}"><button type="button" class="x" data-rm="${i}" aria-label="${t("del")}">×</button></div>`).join("");
+}
+function calc() {
+  const rate = Number($("#qx").value) || 0;
+  const sub = r2(items.reduce((s, it) => s + it.q * it.p, 0));
+  const tax = r2(sub * rate / 100);
+  return {rate, sub, tax, total: r2(sub + tax)};
+}
+function totals() {
+  const c = calc(), cur = $("#qu").value;
+  $("#tt").innerHTML = `${t("sub")}: ${money(c.sub, cur)}<br>${t("tax")} ${c.rate}: ${money(c.tax, cur)}<br><b>${t("total")}: ${money(c.total, cur)}</b>`;
+}
+
+const main = $("#view");
+main.addEventListener("input", e => {
+  const el = e.target;
+  if (el.dataset.f) {
+    const it = items[el.dataset.i], f = el.dataset.f;
+    it[f] = (f === "q" || f === "p") ? Number(el.value) || 0 : el.value;
+    totals();
+  } else if (el.id === "qx") totals();
+});
+main.addEventListener("change", e => {
+  const el = e.target;
+  if (el.id === "qu") totals();
+  if (el.dataset.st) sb.from("quotes").update({status: el.value}).eq("id", el.dataset.st).then(load);
+});
+main.addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "ai") { items.push({kind:"labor", d:"", q:1, p:0}); rows(); totals(); }
+  if (b.dataset.rm) { items.splice(b.dataset.rm, 1); if (!items.length) items.push({kind:"labor", d:"", q:1, p:0}); rows(); totals(); }
+  if (b.dataset.dc && confirm(t("ask"))) { await sb.from("customers").delete().eq("id", b.dataset.dc); await load(); view(); }
+  if (b.dataset.dq && confirm(t("ask"))) { await sb.from("quotes").delete().eq("id", b.dataset.dq); await load(); view(); }
+});
+main.addEventListener("submit", async e => {
+  e.preventDefault();
+  let r;
+  if (e.target.id === "cf") {
+    r = await sb.from("customers").insert({name: $("#cn").value.trim(), email: $("#ce").value.trim() || null, phone: $("#cp").value.trim() || null});
+  } else if (e.target.id === "qf") {
+    const c = calc();
+    r = await sb.from("quotes").insert({customer_id: $("#qc").value || null, title: $("#qt").value.trim(), currency: $("#qu").value, tax_rate: c.rate, items, subtotal: c.sub, tax: c.tax, total: c.total});
+    if (!r.error) items = [];
+  }
+  if (r && r.error) return alert(t("err") + "\n" + r.error.message);
+  await load(); view();
+});
+
+paintAuth();
+if (!configured) { $("#auth").hidden = false; authMsg(t("cfg")); }
+else sb.auth.onAuthStateChange((ev, s) => setTimeout(() => { if (s) start(); else { $("#app").hidden = true; $("#auth").hidden = false; } }, 0));
+</script>
+</body>
+</html>
