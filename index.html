@@ -2,204 +2,202 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QuoteFlow AI</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
-:root{color-scheme:dark;--bg:#000;--ink:#F2F5F8;--muted:#A3AFBC;--card:#0D1218;--line:#232D38;--y:#F5C400;--navy:#0F2A43}
+:root{--bg:#000;--card:#111;--line:#262626;--fg:#f5f5f5;--mut:#9a9a9a;--acc:#f59e0b}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-.w{max-width:960px;margin:0 auto;padding:0 16px}
-h1,h2{margin:0 0 12px}h2{font-size:22px}
-input,select,button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
-button{cursor:pointer}.p{background:var(--y);color:var(--navy);border:0;font-weight:700}
-.x{padding:9px 12px;color:var(--muted)}
-:focus-visible{outline:3px solid var(--y);outline-offset:2px}
-.box{max-width:380px;margin:12vh auto;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:10px}
-.box form{display:grid;gap:10px}.box h1{font-size:24px}
-.msg{color:var(--y);font-size:14px;min-height:20px}
-header{border-bottom:1px solid var(--line)}
-.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}
-.top b{margin-inline-end:auto;font-size:18px}
-.tabs{display:flex;gap:6px;padding:12px 0;overflow-x:auto}
-.tabs button.on{background:var(--y);color:var(--navy);border:0;font-weight:700}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.st{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
-.st small{color:var(--muted);display:block}.st b{font-size:22px}
-.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:16px}
-.ir{display:grid;grid-template-columns:110px 1fr 70px 90px 40px;gap:6px;margin-bottom:6px}
-.li{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
-.li>span:first-child{flex:1 1 200px}.li small{color:var(--muted);display:block}
-.tt{text-align:end;margin:10px 0;font-variant-numeric:tabular-nums}
-.tt b{font-size:20px}
-.empty{color:var(--muted);padding:24px 0}
-@media (max-width:560px){.ir{grid-template-columns:1fr 1fr 40px}.ir input:nth-child(2){grid-column:1/-1;order:-1}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+nav{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#000d;backdrop-filter:blur(8px);z-index:5;flex-wrap:wrap}
+.logo{font-weight:800;font-size:18px}.logo b{color:var(--acc)}
+nav div{display:flex;gap:6px;flex-wrap:wrap}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+button{cursor:pointer}button.p{background:var(--acc);color:#000;border-color:var(--acc);font-weight:700}
+section{max-width:960px;margin:0 auto;padding:32px 16px}
+.hero{text-align:center;padding-top:56px}
+h1{font-size:clamp(30px,7vw,52px);margin:0 0 12px;line-height:1.1}
+.hero p{color:var(--mut);max-width:560px;margin:0 auto 20px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.trade{text-align:center;font-size:14px}.trade span{display:block;font-size:38px}
+.price{font-size:30px;font-weight:800}.price small{font-size:13px;color:var(--mut);font-weight:400}
+.card ul{padding-left:18px;color:var(--mut);font-size:14px;margin:8px 0 0}
+.hl{border-color:var(--acc)}
+h2{margin:0 0 16px}
+.tabs{display:flex;gap:8px;margin-bottom:16px;align-items:center}.tabs button.on{border-color:var(--acc);color:var(--acc)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+input{width:100%}.row input{flex:1;min-width:140px;width:auto}
+textarea{width:100%;min-height:90px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:start}
+td:last-child,th:last-child{text-align:end}
+.tot{font-weight:800;color:var(--acc)}
+.mut{color:var(--mut);font-size:13px}
+.hide{display:none}
+#auth{max-width:380px;margin:0 auto}#auth input{margin-bottom:10px}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:24px}
 </style>
 </head>
 <body>
-<div id="auth" class="box" hidden>
-<h1>QuoteFlow AI</h1>
-<form id="af">
-<input id="em" type="email" required autocomplete="email" placeholder="Email">
-<input id="pw" type="password" required minlength="6" autocomplete="current-password" placeholder="Password">
-<button class="p" id="go"></button>
-<button type="button" id="sw"></button>
-<select id="al"><option value="en">English</option><option value="fr">Français</option></select>
-<div class="msg" id="am" role="status"></div>
-</form>
-</div>
-<div id="app" hidden>
-<header><div class="w"><div class="top"><b>QuoteFlow AI</b><select id="hl"><option value="en">English</option><option value="fr">Français</option></select><button id="lo"></button></div>
-<div class="tabs" id="tabs"></div></div></header>
-<main class="w" id="view" style="padding-top:20px;padding-bottom:40px"></main>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.9"></script>
+<nav>
+  <div class="logo">Quote<b>Flow</b> AI</div>
+  <div>
+    <select id="lang"><option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option><option value="ar">AR</option></select>
+    <select id="cur"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option></select>
+    <button data-go="home" data-i="home"></button>
+    <button data-go="pricing" data-i="pricing"></button>
+    <button class="p" data-go="app" data-i="app"></button>
+  </div>
+</nav>
+
+<main id="home">
+  <section class="hero">
+    <h1 data-i="title"></h1>
+    <p data-i="sub"></p>
+    <button class="p" data-go="app" data-i="cta"></button>
+  </section>
+  <section><div class="grid">
+    <div class="card trade"><span>🔧</span><div data-i="t1"></div></div>
+    <div class="card trade"><span>⚡</span><div data-i="t2"></div></div>
+    <div class="card trade"><span>🎨</span><div data-i="t3"></div></div>
+    <div class="card trade"><span>🧹</span><div data-i="t4"></div></div>
+    <div class="card trade"><span>💻</span><div data-i="t5"></div></div>
+  </div></section>
+</main>
+
+<main id="pricing" class="hide"><section><h2 data-i="pricing"></h2><div class="grid" id="plans"></div></section></main>
+
+<main id="app" class="hide"><section>
+  <div id="auth" class="card hide">
+    <h2 data-i="login"></h2>
+    <input id="em" type="email" autocomplete="username" data-ph="email">
+    <input id="pw" type="password" autocomplete="current-password" data-ph="password">
+    <div class="row"><button class="p" id="bin" data-i="signin"></button><button id="bup" data-i="signup"></button></div>
+    <p class="mut" id="amsg"></p>
+  </div>
+
+  <div id="dash" class="hide">
+    <div class="tabs">
+      <button class="on" data-tab="q" data-i="quotes"></button>
+      <button data-tab="c" data-i="clients"></button>
+      <span style="flex:1"></span>
+      <span class="mut" id="who"></span>
+      <button id="bout" data-i="logout"></button>
+    </div>
+    <div id="tab-q">
+      <div class="card">
+        <label class="mut" data-i="describe"></label>
+        <textarea id="desc" placeholder="Ex: replace a kitchen sink tap and fix a leak"></textarea>
+        <div class="row" style="margin-top:8px">
+          <select id="qclient"></select>
+          <label class="mut"><span data-i="tax"></span> <input id="tax" type="number" value="10" style="width:70px">%</label>
+          <button class="p" id="gen" data-i="gen"></button>
+        </div>
+        <div id="out"></div>
+      </div>
+      <h3 data-i="history"></h3>
+      <div id="qlist"></div>
+    </div>
+    <div id="tab-c" class="hide">
+      <div class="card"><div class="row">
+        <input id="cn" data-ph="name"><input id="ce" type="email" data-ph="email"><button class="p" id="addc" data-i="add"></button>
+      </div></div>
+      <div id="clist" style="margin-top:12px"></div>
+    </div>
+  </div>
+</section></main>
+
+<footer>© QuoteFlow AI</footer>
+
 <script>
-// Colle ici les deux valeurs de Supabase (Project Settings > API).
-const SUPABASE_URL = "https://xyrlikxuqygypekrefgq.supabase.co";
-const SUPABASE_KEY = "sb_publishable_PP77mkgp_7BzTj3G-1vQcQ_TWXBsycP"; // clé publique, faite pour être dans le code
+const SB_URL="https://ijrxikcethijtzvdjkob.supabase.co";
+const SB_KEY="sb_publishable_PP77mkgp_7BzTj3G-1vQcQ_TWXBsycP";
+const sb=supabase.createClient(SB_URL,SB_KEY);
 
-const L = {
-en:{signin:"Sign in",signup:"Create account",toup:"No account? Create one",toin:"Have an account? Sign in",check:"Check your email to confirm your account, then sign in.",dash:"Dashboard",customers:"Customers",quotes:"Quotes",logout:"Sign out",nq:"Quotes",nc:"Customers",tv:"Total quoted",av:"Accepted",pe:"Waiting for answer",name:"Name",phone:"Phone",add:"Add",del:"Delete",none:"Nothing here yet.",nw:"New quote",title:"Job title",cust:"Customer",nocust:"No customer",cur:"Currency",tax:"Tax %",labor:"Labor",material:"Material",desc:"Description",item:"Add line",save:"Save quote",sub:"Subtotal",total:"Total",draft:"Draft",sent:"Sent",accepted:"Accepted",declined:"Declined",ask:"Delete this item?",err:"Something went wrong. Try again.",cfg:"Add your Supabase URL and key in index.html first."},
-fr:{signin:"Se connecter",signup:"Créer un compte",toup:"Pas de compte ? Créer un compte",toin:"Déjà un compte ? Se connecter",check:"Vérifiez votre email pour confirmer le compte, puis connectez-vous.",dash:"Tableau de bord",customers:"Clients",quotes:"Devis",logout:"Déconnexion",nq:"Devis",nc:"Clients",tv:"Total des devis",av:"Acceptés",pe:"En attente de réponse",name:"Nom",phone:"Téléphone",add:"Ajouter",del:"Supprimer",none:"Rien pour l’instant.",nw:"Nouveau devis",title:"Titre du chantier",cust:"Client",nocust:"Aucun client",cur:"Devise",tax:"Taxe %",labor:"Main-d’œuvre",material:"Matériel",desc:"Description",item:"Ajouter une ligne",save:"Enregistrer le devis",sub:"Sous-total",total:"Total",draft:"Brouillon",sent:"Envoyé",accepted:"Accepté",declined:"Refusé",ask:"Supprimer cet élément ?",err:"Une erreur est survenue. Réessayez.",cfg:"Ajoutez d’abord votre URL et votre clé Supabase dans index.html."}
+const T={
+en:{home:"Home",pricing:"Pricing",app:"Dashboard",title:"Quotes & invoices in seconds",sub:"Describe the job. AI builds a professional quote with labor, materials and taxes.",cta:"Try it free",t1:"Plumbers",t2:"Electricians",t3:"Painters",t4:"Cleaning",t5:"Freelancers",quotes:"Quotes",clients:"Clients",describe:"Describe the job",tax:"Tax",gen:"Generate quote",history:"History",add:"Add",name:"Name",email:"Email",password:"Password",login:"Log in",signin:"Sign in",signup:"Create account",logout:"Log out",perMonth:"/month",free:"Free",q3:"3 quotes / month",lab:"Labor",mat:"Materials",sub2:"Subtotal",total:"Total",save:"Save",none:"Nothing yet",noc:"No client",del:"Delete",choose:"Get started",unl:"Unlimited quotes",pdf:"PDF export",rem:"Automatic reminders",team:"Team accounts",chk:"Account created. If asked, confirm your email, then sign in."},
+fr:{home:"Accueil",pricing:"Tarifs",app:"Tableau de bord",title:"Devis et factures en quelques secondes",sub:"Décrivez le chantier. L’IA prépare un devis pro avec main-d’œuvre, matériaux et taxes.",cta:"Essayer gratuitement",t1:"Plombiers",t2:"Électriciens",t3:"Peintres",t4:"Nettoyage",t5:"Indépendants",quotes:"Devis",clients:"Clients",describe:"Décrivez le travail",tax:"Taxe",gen:"Générer le devis",history:"Historique",add:"Ajouter",name:"Nom",email:"Email",password:"Mot de passe",login:"Connexion",signin:"Se connecter",signup:"Créer un compte",logout:"Déconnexion",perMonth:"/mois",free:"Gratuit",q3:"3 devis / mois",lab:"Main-d’œuvre",mat:"Matériaux",sub2:"Sous-total",total:"Total",save:"Enregistrer",none:"Rien pour l’instant",noc:"Sans client",del:"Supprimer",choose:"Commencer",unl:"Devis illimités",pdf:"Export PDF",rem:"Relances automatiques",team:"Comptes équipe",chk:"Compte créé. Si besoin, confirmez votre email, puis connectez-vous."},
+es:{home:"Inicio",pricing:"Precios",app:"Panel",title:"Presupuestos y facturas en segundos",sub:"Describe el trabajo. La IA crea un presupuesto profesional con mano de obra, materiales e impuestos.",cta:"Probar gratis",t1:"Plomeros",t2:"Electricistas",t3:"Pintores",t4:"Limpieza",t5:"Autónomos",quotes:"Presupuestos",clients:"Clientes",describe:"Describe el trabajo",tax:"Impuesto",gen:"Generar presupuesto",history:"Historial",add:"Añadir",name:"Nombre",email:"Email",password:"Contraseña",login:"Iniciar sesión",signin:"Entrar",signup:"Crear cuenta",logout:"Salir",perMonth:"/mes",free:"Gratis",q3:"3 presupuestos / mes",lab:"Mano de obra",mat:"Materiales",sub2:"Subtotal",total:"Total",save:"Guardar",none:"Nada todavía",noc:"Sin cliente",del:"Borrar",choose:"Empezar",unl:"Presupuestos ilimitados",pdf:"Exportar PDF",rem:"Recordatorios automáticos",team:"Cuentas de equipo",chk:"Cuenta creada. Si hace falta, confirma tu email y entra."},
+ar:{home:"الرئيسية",pricing:"الأسعار",app:"لوحة التحكم",title:"عروض أسعار وفواتير في ثوانٍ",sub:"صف العمل وسينشئ الذكاء الاصطناعي عرض سعر احترافيًا يشمل العمالة والمواد والضرائب.",cta:"جرّب مجانًا",t1:"السباكون",t2:"الكهربائيون",t3:"الدهانون",t4:"التنظيف",t5:"المستقلون",quotes:"عروض الأسعار",clients:"العملاء",describe:"صف العمل",tax:"الضريبة",gen:"إنشاء عرض سعر",history:"السجل",add:"إضافة",name:"الاسم",email:"البريد",password:"كلمة المرور",login:"تسجيل الدخول",signin:"دخول",signup:"إنشاء حساب",logout:"خروج",perMonth:"/شهريًا",free:"مجاني",q3:"3 عروض / شهر",lab:"العمالة",mat:"المواد",sub2:"المجموع الفرعي",total:"الإجمالي",save:"حفظ",none:"لا شيء بعد",noc:"بدون عميل",del:"حذف",choose:"ابدأ",unl:"عروض غير محدودة",pdf:"تصدير PDF",rem:"تذكيرات تلقائية",team:"حسابات الفريق",chk:"تم إنشاء الحساب. أكّد بريدك إن طُلب ثم سجّل الدخول."}
 };
-let lang = "en"; try { lang = localStorage.getItem("qf-lang") || "en"; } catch (e) {}
-if (!L[lang]) lang = "en";
-const t = k => L[lang][k] || L.en[k];
-const $ = s => document.querySelector(s);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const money = (v, c) => new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US", {style:"currency", currency:c || "USD"}).format(v || 0);
-const r2 = n => Math.round(n * 100) / 100;
+const RATE={USD:1,EUR:.92,GBP:.79,CAD:1.37};
+const PLANS=[["free",0,["q3"]],["Starter",19,["unl","pdf"]],["Professional",39,["unl","pdf","rem"]],["Business",79,["unl","pdf","rem","team"]]];
+const JOBS=[
+ [/plomb|plumb|fuite|leak|tap|robinet/i,"Plumbing",3,65,["Pipes & fittings",80]],
+ [/élec|elec|wir|câbl|light|lamp|prise|socket/i,"Electrical",4,75,["Cables & fixtures",120]],
+ [/peint|paint|mur|wall/i,"Painting",8,45,["Paint & supplies",150]],
+ [/nettoy|clean|ménage/i,"Cleaning",5,35,["Cleaning supplies",25]]
+];
+let lang="en",cur="USD",last=null,user=null,clients=[],quotes=[];
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const t=k=>T[lang][k]||k;
+const money=n=>new Intl.NumberFormat(lang,{style:"currency",currency:cur}).format(n*RATE[cur]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-const configured = !SUPABASE_URL.startsWith("PASTE");
-const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let customers = [], quotes = [], tab = "dash", signup = false, items = [];
-
-function setLang(l) { lang = l; try { localStorage.setItem("qf-lang", l); } catch (e) {} paintAuth(); if (!$("#app").hidden) { paintNav(); view(); } }
-function paintAuth() {
-  $("#go").textContent = signup ? t("signup") : t("signin");
-  $("#sw").textContent = signup ? t("toin") : t("toup");
-  $("#pw").autocomplete = signup ? "new-password" : "current-password";
-  $("#al").value = lang; $("#hl").value = lang; document.documentElement.lang = lang;
+function setUser(u){
+  user=u||null;
+  const m=(user&&user.user_metadata)||{};
+  clients=m.clients||[];quotes=m.quotes||[];
+  render();
 }
-function paintNav() {
-  $("#lo").textContent = t("logout");
-  $("#tabs").innerHTML = ["dash","customers","quotes"].map(k => `<button data-tab="${k}" class="${tab === k ? "on" : ""}">${t(k)}</button>`).join("");
+async function persist(){
+  const r=await sb.auth.updateUser({data:{clients,quotes}});
+  if(r.error)alert(r.error.message);
 }
-function authMsg(m) { $("#am").textContent = m; }
+function render(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+  $$("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));
+  $$("[data-ph]").forEach(e=>e.placeholder=t(e.dataset.ph));
+  $("#auth").classList.toggle("hide",!!user);
+  $("#dash").classList.toggle("hide",!user);
+  $("#who").textContent=user?user.email:"";
+  $("#plans").innerHTML=PLANS.map((p,i)=>`<div class="card ${i==2?"hl":""}"><b>${p[0]=="free"?t("free"):p[0]}</b><div class="price">${money(p[1])}<small> ${t("perMonth")}</small></div><ul>${p[2].map(f=>`<li>${t(f)}</li>`).join("")}</ul><p><button class="${i==2?"p":""}" data-go="app">${t("choose")}</button></p></div>`).join("");
+  $("#qclient").innerHTML=`<option value="">${t("noc")}</option>`+clients.map((c,i)=>`<option value="${i}">${esc(c.n)}</option>`).join("");
+  $("#clist").innerHTML=clients.length?clients.map((c,i)=>`<div class="card row" style="justify-content:space-between;align-items:center"><span>${esc(c.n)} <span class="mut">${esc(c.e)}</span></span><button data-delc="${i}">${t("del")}</button></div>`).join(""):`<p class="mut">${t("none")}</p>`;
+  $("#qlist").innerHTML=quotes.length?quotes.map((q,i)=>`<div class="card row" style="justify-content:space-between;align-items:center"><span>${esc(q.title)} <span class="mut">${esc(q.client)}</span></span><span class="tot">${money(q.total)}</span><button data-delq="${i}">${t("del")}</button></div>`).join(""):`<p class="mut">${t("none")}</p>`;
+  if(last)showQuote();
+  wire();
+}
+function wire(){
+  $$("[data-go]").forEach(b=>b.onclick=()=>{["home","pricing","app"].forEach(v=>$("#"+v).classList.toggle("hide",v!==b.dataset.go));scrollTo(0,0)});
+  $$("[data-delc]").forEach(b=>b.onclick=async()=>{clients.splice(b.dataset.delc,1);await persist();render()});
+  $$("[data-delq]").forEach(b=>b.onclick=async()=>{quotes.splice(b.dataset.delq,1);await persist();render()});
+}
+$$("[data-tab]").forEach(b=>b.onclick=()=>{$$("[data-tab]").forEach(x=>x.classList.toggle("on",x===b));$("#tab-q").classList.toggle("hide",b.dataset.tab!=="q");$("#tab-c").classList.toggle("hide",b.dataset.tab!=="c")});
+$("#lang").onchange=e=>{lang=e.target.value;render()};
+$("#cur").onchange=e=>{cur=e.target.value;render()};
 
-$("#af").onsubmit = async e => {
-  e.preventDefault();
-  if (!configured) return authMsg(t("cfg"));
-  authMsg("");
-  const cred = {email: $("#em").value.trim(), password: $("#pw").value};
-  const r = signup ? await sb.auth.signUp(cred) : await sb.auth.signInWithPassword(cred);
-  if (r.error) return authMsg(r.error.message);
-  if (signup && !r.data.session) authMsg(t("check"));
+$("#bin").onclick=async()=>{
+  $("#amsg").textContent="…";
+  const r=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});
+  $("#amsg").textContent=r.error?r.error.message:"";
+  if(!r.error)setUser(r.data.user);
 };
-$("#sw").onclick = () => { signup = !signup; authMsg(""); paintAuth(); };
-$("#al").onchange = e => setLang(e.target.value);
-$("#hl").onchange = e => setLang(e.target.value);
-$("#lo").onclick = () => sb.auth.signOut();
-$("#tabs").onclick = e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; paintNav(); view(); } };
+$("#bup").onclick=async()=>{
+  $("#amsg").textContent="…";
+  const r=await sb.auth.signUp({email:$("#em").value.trim(),password:$("#pw").value});
+  if(r.error){$("#amsg").textContent=r.error.message;return}
+  if(r.data.session)setUser(r.data.user);else $("#amsg").textContent=t("chk");
+};
+$("#bout").onclick=async()=>{await sb.auth.signOut();setUser(null)};
 
-async function load() {
-  const [c, q] = await Promise.all([
-    sb.from("customers").select("*").order("name"),
-    sb.from("quotes").select("*").order("created_at", {ascending:false})
-  ]);
-  customers = c.data || []; quotes = q.data || [];
+$("#addc").onclick=async()=>{const n=$("#cn").value.trim();if(!n)return;clients.push({n,e:$("#ce").value.trim()});$("#cn").value=$("#ce").value="";await persist();render()};
+$("#gen").onclick=()=>{
+  const d=$("#desc").value.trim();if(!d)return;
+  const j=JOBS.find(x=>x[0].test(d))||[0,"Service",2,55,["Materials",40]];
+  const labor=j[2]*j[3],mat=j[4][1],sub=labor+mat,rate=(+$("#tax").value||0)/100,ci=$("#qclient").value;
+  last={title:d.slice(0,40),client:ci===""?"":clients[ci].n,job:j[1],hours:j[2],rate:j[3],mname:j[4][0],labor,mat,sub,tax:sub*rate,total:sub*(1+rate)};
+  showQuote();
+};
+function showQuote(){
+  const q=last;
+  $("#out").innerHTML=`<table><tr><th>${esc(q.job)}</th><th></th></tr><tr><td>${t("lab")} (${q.hours}h × ${money(q.rate)})</td><td>${money(q.labor)}</td></tr><tr><td>${t("mat")}: ${esc(q.mname)}</td><td>${money(q.mat)}</td></tr><tr><td>${t("sub2")}</td><td>${money(q.sub)}</td></tr><tr><td>${t("tax")}</td><td>${money(q.tax)}</td></tr><tr><td class="tot">${t("total")}</td><td class="tot">${money(q.total)}</td></tr></table><p><button class="p" id="sv">${t("save")}</button></p>`;
+  $("#sv").onclick=async()=>{quotes.unshift({title:q.title,client:q.client,total:q.total});last=null;$("#out").innerHTML="";$("#desc").value="";await persist();render()};
 }
-async function start() { $("#auth").hidden = true; $("#app").hidden = false; paintNav(); await load(); view(); }
-
-function sumBy(filter) {
-  const m = {};
-  quotes.filter(filter).forEach(q => { m[q.currency] = (m[q.currency] || 0) + Number(q.total); });
-  const s = Object.entries(m).map(([c, v]) => money(v, c)).join(", ");
-  return s || money(0, "USD");
-}
-function view() {
-  const v = $("#view");
-  if (tab === "dash") {
-    v.innerHTML = `<h2>${t("dash")}</h2><div class="stats">
-    <div class="st"><small>${t("nq")}</small><b>${quotes.length}</b></div>
-    <div class="st"><small>${t("nc")}</small><b>${customers.length}</b></div>
-    <div class="st"><small>${t("tv")}</small><b>${esc(sumBy(() => true))}</b></div>
-    <div class="st"><small>${t("av")}</small><b>${esc(sumBy(q => q.status === "accepted"))}</b></div>
-    <div class="st"><small>${t("pe")}</small><b>${quotes.filter(q => q.status === "sent").length}</b></div></div>`;
-  } else if (tab === "customers") {
-    v.innerHTML = `<h2>${t("customers")}</h2>
-    <form class="f" id="cf"><input id="cn" required placeholder="${t("name")}"><input id="ce" type="email" placeholder="Email"><input id="cp" placeholder="${t("phone")}"><button class="p">${t("add")}</button></form>
-    ${customers.length ? customers.map(c => `<div class="li"><span>${esc(c.name)}<small>${esc([c.email, c.phone].filter(Boolean).join(", "))}</small></span><button class="x" data-dc="${c.id}">${t("del")}</button></div>`).join("") : `<div class="empty">${t("none")}</div>`}`;
-  } else {
-    if (!items.length) items = [{kind:"labor", d:"", q:1, p:0}];
-    const names = Object.fromEntries(customers.map(c => [c.id, c.name]));
-    v.innerHTML = `<h2>${t("nw")}</h2>
-    <form id="qf"><div class="f"><input id="qt" required placeholder="${t("title")}">
-    <select id="qc"><option value="">${t("nocust")}</option>${customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
-    <select id="qu"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option></select>
-    <input id="qx" type="number" min="0" step="any" value="0" aria-label="${t("tax")}" placeholder="${t("tax")}"></div>
-    <div id="items"></div><button type="button" id="ai">${t("item")}</button>
-    <div class="tt" id="tt"></div><button class="p">${t("save")}</button></form>
-    <h2 style="margin-top:32px">${t("quotes")}</h2>
-    ${quotes.length ? quotes.map(q => `<div class="li"><span>Q-${String(q.number).padStart(4, "0")} ${esc(q.title)}<small>${esc(names[q.customer_id] || "")} ${new Date(q.created_at).toLocaleDateString(lang)}</small></span><b>${money(q.total, q.currency)}</b>
-    <select data-st="${q.id}">${["draft","sent","accepted","declined"].map(s => `<option value="${s}"${q.status === s ? " selected" : ""}>${t(s)}</option>`).join("")}</select>
-    <button class="x" data-dq="${q.id}">${t("del")}</button></div>`).join("") : `<div class="empty">${t("none")}</div>`}`;
-    rows(); totals();
-  }
-}
-function rows() {
-  $("#items").innerHTML = items.map((it, i) => `<div class="ir"><select data-i="${i}" data-f="kind"><option value="labor"${it.kind === "labor" ? " selected" : ""}>${t("labor")}</option><option value="material"${it.kind === "material" ? " selected" : ""}>${t("material")}</option></select>
-  <input data-i="${i}" data-f="d" placeholder="${t("desc")}" value="${esc(it.d)}"><input data-i="${i}" data-f="q" type="number" min="0" step="any" value="${it.q}"><input data-i="${i}" data-f="p" type="number" min="0" step="any" value="${it.p}"><button type="button" class="x" data-rm="${i}" aria-label="${t("del")}">×</button></div>`).join("");
-}
-function calc() {
-  const rate = Number($("#qx").value) || 0;
-  const sub = r2(items.reduce((s, it) => s + it.q * it.p, 0));
-  const tax = r2(sub * rate / 100);
-  return {rate, sub, tax, total: r2(sub + tax)};
-}
-function totals() {
-  const c = calc(), cur = $("#qu").value;
-  $("#tt").innerHTML = `${t("sub")}: ${money(c.sub, cur)}<br>${t("tax")} ${c.rate}: ${money(c.tax, cur)}<br><b>${t("total")}: ${money(c.total, cur)}</b>`;
-}
-
-const main = $("#view");
-main.addEventListener("input", e => {
-  const el = e.target;
-  if (el.dataset.f) {
-    const it = items[el.dataset.i], f = el.dataset.f;
-    it[f] = (f === "q" || f === "p") ? Number(el.value) || 0 : el.value;
-    totals();
-  } else if (el.id === "qx") totals();
-});
-main.addEventListener("change", e => {
-  const el = e.target;
-  if (el.id === "qu") totals();
-  if (el.dataset.st) sb.from("quotes").update({status: el.value}).eq("id", el.dataset.st).then(load);
-});
-main.addEventListener("click", async e => {
-  const b = e.target.closest("button"); if (!b) return;
-  if (b.id === "ai") { items.push({kind:"labor", d:"", q:1, p:0}); rows(); totals(); }
-  if (b.dataset.rm) { items.splice(b.dataset.rm, 1); if (!items.length) items.push({kind:"labor", d:"", q:1, p:0}); rows(); totals(); }
-  if (b.dataset.dc && confirm(t("ask"))) { await sb.from("customers").delete().eq("id", b.dataset.dc); await load(); view(); }
-  if (b.dataset.dq && confirm(t("ask"))) { await sb.from("quotes").delete().eq("id", b.dataset.dq); await load(); view(); }
-});
-main.addEventListener("submit", async e => {
-  e.preventDefault();
-  let r;
-  if (e.target.id === "cf") {
-    r = await sb.from("customers").insert({name: $("#cn").value.trim(), email: $("#ce").value.trim() || null, phone: $("#cp").value.trim() || null});
-  } else if (e.target.id === "qf") {
-    const c = calc();
-    r = await sb.from("quotes").insert({customer_id: $("#qc").value || null, title: $("#qt").value.trim(), currency: $("#qu").value, tax_rate: c.rate, items, subtotal: c.sub, tax: c.tax, total: c.total});
-    if (!r.error) items = [];
-  }
-  if (r && r.error) return alert(t("err") + "\n" + r.error.message);
-  await load(); view();
-});
-
-paintAuth();
-if (!configured) { $("#auth").hidden = false; authMsg(t("cfg")); }
-else sb.auth.onAuthStateChange((ev, s) => setTimeout(() => { if (s) start(); else { $("#app").hidden = true; $("#auth").hidden = false; } }, 0));
+sb.auth.getSession().then(r=>setUser(r.data.session&&r.data.session.user));
+sb.auth.onAuthStateChange((e,s)=>{if(e==="SIGNED_OUT"||e==="SIGNED_IN")setUser(s&&s.user)});
+render();
 </script>
 </body>
 </html>
