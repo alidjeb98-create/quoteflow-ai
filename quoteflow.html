@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuoteFlow AI</title>
+<style>
+:root{--bg:#000;--card:#111;--line:#262626;--fg:#f5f5f5;--mut:#9a9a9a;--acc:#f59e0b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+nav{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#000d;backdrop-filter:blur(8px);z-index:5;flex-wrap:wrap}
+.logo{font-weight:800;font-size:18px}.logo b{color:var(--acc)}
+nav div{display:flex;gap:6px;flex-wrap:wrap}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+button{cursor:pointer}button.p{background:var(--acc);color:#000;border-color:var(--acc);font-weight:700}
+section{max-width:960px;margin:0 auto;padding:32px 16px}
+.hero{text-align:center;padding-top:56px}
+h1{font-size:clamp(30px,7vw,52px);margin:0 0 12px;line-height:1.1}
+.hero p{color:var(--mut);max-width:560px;margin:0 auto 20px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.trade{text-align:center;font-size:14px}.trade span{display:block;font-size:38px}
+.price{font-size:30px;font-weight:800}.price small{font-size:13px;color:var(--mut);font-weight:400}
+.card ul{padding-left:18px;color:var(--mut);font-size:14px;margin:8px 0 0}
+.hl{border-color:var(--acc)}
+h2{margin:0 0 16px}
+.tabs{display:flex;gap:8px;margin-bottom:16px;align-items:center}.tabs button.on{border-color:var(--acc);color:var(--acc)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+input{width:100%}.row input{flex:1;min-width:140px;width:auto}
+textarea{width:100%;min-height:90px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:start}
+td:last-child,th:last-child{text-align:end}
+.tot{font-weight:800;color:var(--acc)}
+.mut{color:var(--mut);font-size:13px}
+.hide{display:none}
+#auth{max-width:380px;margin:0 auto}#auth input{margin-bottom:10px}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:24px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Quote<b>Flow</b> AI</div>
+  <div>
+    <select id="lang"><option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option><option value="ar">AR</option></select>
+    <select id="cur"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option></select>
+    <button data-go="home" data-i="home"></button>
+    <button data-go="pricing" data-i="pricing"></button>
+    <button class="p" data-go="app" data-i="app"></button>
+  </div>
+</nav>
+
+<main id="home">
+  <section class="hero">
+    <h1 data-i="title"></h1>
+    <p data-i="sub"></p>
+    <button class="p" data-go="app" data-i="cta"></button>
+  </section>
+  <section><div class="grid">
+    <div class="card trade"><span>🔧</span><div data-i="t1"></div></div>
+    <div class="card trade"><span>⚡</span><div data-i="t2"></div></div>
+    <div class="card trade"><span>🎨</span><div data-i="t3"></div></div>
+    <div class="card trade"><span>🧹</span><div data-i="t4"></div></div>
+    <div class="card trade"><span>💻</span><div data-i="t5"></div></div>
+  </div></section>
+</main>
+
+<main id="pricing" class="hide"><section><h2 data-i="pricing"></h2><div class="grid" id="plans"></div></section></main>
+
+<main id="app" class="hide"><section>
+  <div id="auth" class="card hide">
+    <h2 data-i="login"></h2>
+    <input id="em" type="email" autocomplete="username" data-ph="email">
+    <input id="pw" type="password" autocomplete="current-password" data-ph="password">
+    <div class="row"><button class="p" id="bin" data-i="signin"></button><button id="bup" data-i="signup"></button></div>
+    <p class="mut" id="amsg"></p>
+  </div>
+
+  <div id="dash" class="hide">
+    <div class="tabs">
+      <button class="on" data-tab="q" data-i="quotes"></button>
+      <button data-tab="c" data-i="clients"></button>
+      <span style="flex:1"></span>
+      <span class="mut" id="who"></span>
+      <button id="bout" data-i="logout"></button>
+    </div>
+    <div id="tab-q">
+      <div class="card">
+        <label class="mut" data-i="describe"></label>
+        <textarea id="desc" placeholder="Ex: replace a kitchen sink tap and fix a leak"></textarea>
+        <div class="row" style="margin-top:8px">
+          <select id="qclient"></select>
+          <label class="mut"><span data-i="tax"></span> <input id="tax" type="number" value="10" style="width:70px">%</label>
+          <button class="p" id="gen" data-i="gen"></button>
+        </div>
+        <div id="out"></div>
+      </div>
+      <h3 data-i="history"></h3>
+      <div id="qlist"></div>
+    </div>
+    <div id="tab-c" class="hide">
+      <div class="card"><div class="row">
+        <input id="cn" data-ph="name"><input id="ce" type="email" data-ph="email"><button class="p" id="addc" data-i="add"></button>
+      </div></div>
+      <div id="clist" style="margin-top:12px"></div>
+    </div>
+  </div>
+</section></main>
+
+<footer>© QuoteFlow AI</footer>
+
+<script>
+const SB_URL="https://xyrlikxuqygypekrefgq.supabase.co";
+const SB_KEY="sb_publishable_PP77mkgp_7BzTj3G-1vQcQ_TWXBsycP";
+let session=null;
+try{session=JSON.parse(localStorage.getItem("qf_s")||"null")}catch(e){}
+function saveSession(x){session=x;try{x?localStorage.setItem("qf_s",JSON.stringify(x)):localStorage.removeItem("qf_s")}catch(e){}}
+async function api(path,opt={}){
+  const r=await fetch(SB_URL+"/auth/v1"+path,Object.assign({},opt,{headers:Object.assign({apikey:SB_KEY,"Content-Type":"application/json"},opt.headers||{})}));
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.msg||j.error_description||j.message||j.error||("HTTP "+r.status));
+  return j;
+}
+const bearer=()=>({Authorization:"Bearer "+session.access_token});
+async function currentUser(){
+  if(!session)return null;
+  try{return await api("/user",{headers:bearer()})}catch(e){
+    try{const n=await api("/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:session.refresh_token})});saveSession(n);return n.user}catch(e2){saveSession(null);return null}
+  }
+}
+
+const T={
+en:{home:"Home",pricing:"Pricing",app:"Dashboard",title:"Quotes & invoices in seconds",sub:"Describe the job. AI builds a professional quote with labor, materials and taxes.",cta:"Try it free",t1:"Plumbers",t2:"Electricians",t3:"Painters",t4:"Cleaning",t5:"Freelancers",quotes:"Quotes",clients:"Clients",describe:"Describe the job",tax:"Tax",gen:"Generate quote",history:"History",add:"Add",name:"Name",email:"Email",password:"Password",login:"Log in",signin:"Sign in",signup:"Create account",logout:"Log out",perMonth:"/month",free:"Free",q3:"3 quotes / month",lab:"Labor",mat:"Materials",sub2:"Subtotal",total:"Total",save:"Save",none:"Nothing yet",noc:"No client",del:"Delete",choose:"Get started",unl:"Unlimited quotes",pdf:"PDF export",rem:"Automatic reminders",team:"Team accounts",chk:"Account created. If asked, confirm your email, then sign in."},
+fr:{home:"Accueil",pricing:"Tarifs",app:"Tableau de bord",title:"Devis et factures en quelques secondes",sub:"Décrivez le chantier. L’IA prépare un devis pro avec main-d’œuvre, matériaux et taxes.",cta:"Essayer gratuitement",t1:"Plombiers",t2:"Électriciens",t3:"Peintres",t4:"Nettoyage",t5:"Indépendants",quotes:"Devis",clients:"Clients",describe:"Décrivez le travail",tax:"Taxe",gen:"Générer le devis",history:"Historique",add:"Ajouter",name:"Nom",email:"Email",password:"Mot de passe",login:"Connexion",signin:"Se connecter",signup:"Créer un compte",logout:"Déconnexion",perMonth:"/mois",free:"Gratuit",q3:"3 devis / mois",lab:"Main-d’œuvre",mat:"Matériaux",sub2:"Sous-total",total:"Total",save:"Enregistrer",none:"Rien pour l’instant",noc:"Sans client",del:"Supprimer",choose:"Commencer",unl:"Devis illimités",pdf:"Export PDF",rem:"Relances automatiques",team:"Comptes équipe",chk:"Compte créé. Si besoin, confirmez votre email, puis connectez-vous."},
+es:{home:"Inicio",pricing:"Precios",app:"Panel",title:"Presupuestos y facturas en segundos",sub:"Describe el trabajo. La IA crea un presupuesto profesional con mano de obra, materiales e impuestos.",cta:"Probar gratis",t1:"Plomeros",t2:"Electricistas",t3:"Pintores",t4:"Limpieza",t5:"Autónomos",quotes:"Presupuestos",clients:"Clientes",describe:"Describe el trabajo",tax:"Impuesto",gen:"Generar presupuesto",history:"Historial",add:"Añadir",name:"Nombre",email:"Email",password:"Contraseña",login:"Iniciar sesión",signin:"Entrar",signup:"Crear cuenta",logout:"Salir",perMonth:"/mes",free:"Gratis",q3:"3 presupuestos / mes",lab:"Mano de obra",mat:"Materiales",sub2:"Subtotal",total:"Total",save:"Guardar",none:"Nada todavía",noc:"Sin cliente",del:"Borrar",choose:"Empezar",unl:"Presupuestos ilimitados",pdf:"Exportar PDF",rem:"Recordatorios automáticos",team:"Cuentas de equipo",chk:"Cuenta creada. Si hace falta, confirma tu email y entra."},
+ar:{home:"الرئيسية",pricing:"الأسعار",app:"لوحة التحكم",title:"عروض أسعار وفواتير في ثوانٍ",sub:"صف العمل وسينشئ الذكاء الاصطناعي عرض سعر احترافيًا يشمل العمالة والمواد والضرائب.",cta:"جرّب مجانًا",t1:"السباكون",t2:"الكهربائيون",t3:"الدهانون",t4:"التنظيف",t5:"المستقلون",quotes:"عروض الأسعار",clients:"العملاء",describe:"صف العمل",tax:"الضريبة",gen:"إنشاء عرض سعر",history:"السجل",add:"إضافة",name:"الاسم",email:"البريد",password:"كلمة المرور",login:"تسجيل الدخول",signin:"دخول",signup:"إنشاء حساب",logout:"خروج",perMonth:"/شهريًا",free:"مجاني",q3:"3 عروض / شهر",lab:"العمالة",mat:"المواد",sub2:"المجموع الفرعي",total:"الإجمالي",save:"حفظ",none:"لا شيء بعد",noc:"بدون عميل",del:"حذف",choose:"ابدأ",unl:"عروض غير محدودة",pdf:"تصدير PDF",rem:"تذكيرات تلقائية",team:"حسابات الفريق",chk:"تم إنشاء الحساب. أكّد بريدك إن طُلب ثم سجّل الدخول."}
+};
+const RATE={USD:1,EUR:.92,GBP:.79,CAD:1.37};
+const PLANS=[["free",0,["q3"]],["Starter",19,["unl","pdf"]],["Professional",39,["unl","pdf","rem"]],["Business",79,["unl","pdf","rem","team"]]];
+const JOBS=[
+ [/plomb|plumb|fuite|leak|tap|robinet/i,"Plumbing",3,65,["Pipes & fittings",80]],
+ [/élec|elec|wir|câbl|light|lamp|prise|socket/i,"Electrical",4,75,["Cables & fixtures",120]],
+ [/peint|paint|mur|wall/i,"Painting",8,45,["Paint & supplies",150]],
+ [/nettoy|clean|ménage/i,"Cleaning",5,35,["Cleaning supplies",25]]
+];
+let lang="en",cur="USD",last=null,user=null,clients=[],quotes=[];
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const t=k=>T[lang][k]||k;
+const money=n=>new Intl.NumberFormat(lang,{style:"currency",currency:cur}).format(n*RATE[cur]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function setUser(u){
+  user=u||null;
+  const m=(user&&user.user_metadata)||{};
+  clients=m.clients||[];quotes=m.quotes||[];
+  render();
+}
+async function persist(){
+  try{await api("/user",{method:"PUT",headers:bearer(),body:JSON.stringify({data:{clients,quotes}})})}catch(e){alert(e.message)}
+}
+function render(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+  $$("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));
+  $$("[data-ph]").forEach(e=>e.placeholder=t(e.dataset.ph));
+  $("#auth").classList.toggle("hide",!!user);
+  $("#dash").classList.toggle("hide",!user);
+  $("#who").textContent=user?user.email:"";
+  $("#plans").innerHTML=PLANS.map((p,i)=>`<div class="card ${i==2?"hl":""}"><b>${p[0]=="free"?t("free"):p[0]}</b><div class="price">${money(p[1])}<small> ${t("perMonth")}</small></div><ul>${p[2].map(f=>`<li>${t(f)}</li>`).join("")}</ul><p><button class="${i==2?"p":""}" data-go="app">${t("choose")}</button></p></div>`).join("");
+  $("#qclient").innerHTML=`<option value="">${t("noc")}</option>`+clients.map((c,i)=>`<option value="${i}">${esc(c.n)}</option>`).join("");
+  $("#clist").innerHTML=clients.length?clients.map((c,i)=>`<div class="card row" style="justify-content:space-between;align-items:center"><span>${esc(c.n)} <span class="mut">${esc(c.e)}</span></span><button data-delc="${i}">${t("del")}</button></div>`).join(""):`<p class="mut">${t("none")}</p>`;
+  $("#qlist").innerHTML=quotes.length?quotes.map((q,i)=>`<div class="card row" style="justify-content:space-between;align-items:center"><span>${esc(q.title)} <span class="mut">${esc(q.client)}</span></span><span class="tot">${money(q.total)}</span><button data-delq="${i}">${t("del")}</button></div>`).join(""):`<p class="mut">${t("none")}</p>`;
+  if(last)showQuote();
+  wire();
+}
+function wire(){
+  $$("[data-go]").forEach(b=>b.onclick=()=>{["home","pricing","app"].forEach(v=>$("#"+v).classList.toggle("hide",v!==b.dataset.go));scrollTo(0,0)});
+  $$("[data-delc]").forEach(b=>b.onclick=async()=>{clients.splice(b.dataset.delc,1);await persist();render()});
+  $$("[data-delq]").forEach(b=>b.onclick=async()=>{quotes.splice(b.dataset.delq,1);await persist();render()});
+}
+$$("[data-tab]").forEach(b=>b.onclick=()=>{$$("[data-tab]").forEach(x=>x.classList.toggle("on",x===b));$("#tab-q").classList.toggle("hide",b.dataset.tab!=="q");$("#tab-c").classList.toggle("hide",b.dataset.tab!=="c")});
+$("#lang").onchange=e=>{lang=e.target.value;render()};
+$("#cur").onchange=e=>{cur=e.target.value;render()};
+
+$("#bin").onclick=async()=>{
+  $("#amsg").textContent="…";
+  try{
+    const n=await api("/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("#em").value.trim(),password:$("#pw").value})});
+    saveSession(n);$("#amsg").textContent="";setUser(n.user);
+  }catch(e){$("#amsg").textContent=e.message}
+};
+$("#bup").onclick=async()=>{
+  $("#amsg").textContent="…";
+  try{
+    const j=await api("/signup",{method:"POST",body:JSON.stringify({email:$("#em").value.trim(),password:$("#pw").value})});
+    if(j.access_token){saveSession(j);$("#amsg").textContent="";setUser(j.user)}else $("#amsg").textContent=t("chk");
+  }catch(e){$("#amsg").textContent=e.message}
+};
+$("#bout").onclick=async()=>{try{await api("/logout",{method:"POST",headers:bearer()})}catch(e){}saveSession(null);setUser(null)};
+
+$("#addc").onclick=async()=>{const n=$("#cn").value.trim();if(!n)return;clients.push({n,e:$("#ce").value.trim()});$("#cn").value=$("#ce").value="";await persist();render()};
+$("#gen").onclick=()=>{
+  const d=$("#desc").value.trim();if(!d)return;
+  const j=JOBS.find(x=>x[0].test(d))||[0,"Service",2,55,["Materials",40]];
+  const labor=j[2]*j[3],mat=j[4][1],sub=labor+mat,rate=(+$("#tax").value||0)/100,ci=$("#qclient").value;
+  last={title:d.slice(0,40),client:ci===""?"":clients[ci].n,job:j[1],hours:j[2],rate:j[3],mname:j[4][0],labor,mat,sub,tax:sub*rate,total:sub*(1+rate)};
+  showQuote();
+};
+function showQuote(){
+  const q=last;
+  $("#out").innerHTML=`<table><tr><th>${esc(q.job)}</th><th></th></tr><tr><td>${t("lab")} (${q.hours}h × ${money(q.rate)})</td><td>${money(q.labor)}</td></tr><tr><td>${t("mat")}: ${esc(q.mname)}</td><td>${money(q.mat)}</td></tr><tr><td>${t("sub2")}</td><td>${money(q.sub)}</td></tr><tr><td>${t("tax")}</td><td>${money(q.tax)}</td></tr><tr><td class="tot">${t("total")}</td><td class="tot">${money(q.total)}</td></tr></table><p><button class="p" id="sv">${t("save")}</button></p>`;
+  $("#sv").onclick=async()=>{quotes.unshift({title:q.title,client:q.client,total:q.total});last=null;$("#out").innerHTML="";$("#desc").value="";await persist();render()};
+}
+currentUser().then(u=>setUser(u));
+render();
+</script>
+</body>
+</html>
