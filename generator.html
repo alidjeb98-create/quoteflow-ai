@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuoteFlow AI – Quote generator</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#000;--panel:#141414;--line:#2a2a2a;--text:#f2f2f2;--mute:#9a9a9a;--accent:#f5a524}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;max-width:760px;margin-inline:auto}
+h1{font-size:1.5rem;margin:8px 0 4px}
+p.sub{color:var(--mute);margin:0 0 20px}
+label{display:block;color:var(--mute);font-size:.875rem;margin:14px 0 6px}
+textarea,select,input{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit}
+textarea{min-height:130px;resize:vertical}
+textarea:focus,select:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:flex;gap:12px}.row>div{flex:1}
+button{background:var(--accent);color:#000;border:0;border-radius:8px;padding:13px 18px;font:inherit;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:wait}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+#msg{margin-top:14px;color:var(--mute)}#msg.err{color:#ff6b6b}
+#quote{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+#quote h2{margin:0 0 12px;font-size:1.25rem}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:420px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:500;font-size:.875rem}
+.tot td{border:0;padding:4px 6px}.tot .grand td{font-weight:700;font-size:1.1rem;color:var(--accent)}
+.notes{color:var(--mute);margin-top:14px;white-space:pre-wrap}
+h3{margin:28px 0 8px;font-size:1.05rem}
+.hist{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hist span:last-child{color:var(--mute);white-space:nowrap}
+.hidden{display:none}
+@media print{body{background:#fff;color:#000}#form,.actions,#msg,#history,h1,p.sub{display:none}#quote{border:0;background:#fff;color:#000}th,td{border-color:#ccc;color:#000}.tot .grand td{color:#000}.notes{color:#333}}
+</style>
+</head>
+<body>
+<h1>AI quote generator</h1>
+<p class="sub">Describe the job. Get a priced quote you can save or print as PDF.</p>
+
+<div id="gate" class="hidden"><p>You need to be signed in. <a href="/" style="color:var(--accent)">Go to QuoteFlow AI and log in</a>, then come back to this page.</p></div>
+
+<div id="form">
+  <label for="desc">Job description</label>
+  <textarea id="desc" placeholder="Example: Replace a kitchen sink tap and fix a leaking pipe under the sink. Two hours of work, materials included."></textarea>
+  <div class="row">
+    <div><label for="cur">Currency</label><select id="cur"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option></select></div>
+    <div><label for="lang">Quote language</label><select id="lang"><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="ar">العربية</option></select></div>
+  </div>
+  <div class="actions"><button id="gen">Generate quote</button></div>
+</div>
+<div id="msg" role="status"></div>
+
+<div id="quote" class="hidden">
+  <h2 id="qtitle"></h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Item</th><th>Qty</th><th>Unit price</th><th>Total</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <table class="tot" style="min-width:0;margin-top:10px"><tbody id="tot"></tbody></table>
+  <div class="notes" id="notes"></div>
+  <div class="actions">
+    <button id="save">Save quote</button>
+    <button class="ghost" id="print">Print / save as PDF</button>
+  </div>
+</div>
+
+<div id="history"><h3>Saved quotes</h3><div id="list"></div></div>
+
+<script>
+const SB_URL="https://xyrlikxuqygypekrefgq.supabase.co";
+const SB_KEY="sb_publishable_PP77mkgp_7BzTj3G-1vQcQ_TWXBsycP";
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=id=>document.getElementById(id);
+let current=null,user=null;
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=(n,cur)=>{try{return new Intl.NumberFormat(undefined,{style:"currency",currency:cur}).format(n)}catch(e){return cur+" "+n.toFixed(2)}};
+function say(t,err){$("msg").textContent=t||"";$("msg").className=err?"err":""}
+
+function totals(q){
+  const items=(q.items||[]).map(i=>({...i,quantity:+i.quantity||0,unit_price:+i.unit_price||0}));
+  const sub=items.reduce((s,i)=>s+i.quantity*i.unit_price,0);
+  let r=+q.tax_rate||0; if(r>0&&r<=1) r*=100;
+  const tax=sub*r/100;
+  return {items,sub,rate:r,tax,total:sub+tax};
+}
+
+function render(q,cur){
+  const t=totals(q); current={q,cur,total:t.total};
+  $("qtitle").textContent=q.title||"Quote";
+  $("rows").innerHTML=t.items.map(i=>`<tr><td>${esc(i.description)}${i.unit?` <span style="color:var(--mute)">(${esc(i.unit)})</span>`:""}</td><td>${i.quantity}</td><td>${money(i.unit_price,cur)}</td><td>${money(i.quantity*i.unit_price,cur)}</td></tr>`).join("");
+  $("tot").innerHTML=`<tr><td>Subtotal</td><td>${money(t.sub,cur)}</td></tr><tr><td>Tax (${t.rate}%)</td><td>${money(t.tax,cur)}</td></tr><tr class="grand"><td>Total</td><td>${money(t.total,cur)}</td></tr>`;
+  $("notes").textContent=q.notes||"";
+  $("quote").classList.remove("hidden");
+}
+
+async function generate(){
+  const description=$("desc").value.trim();
+  if(description.length<10){say("Describe the job in a few words first.",true);return}
+  $("gen").disabled=true;say("Generating your quote…");
+  try{
+    const cur=$("cur").value;
+    const {data,error}=await sb.functions.invoke("generate-quote",{body:{description,currency:cur,language:$("lang").value}});
+    if(error) throw error;
+    if(!data||!Array.isArray(data.items)||!data.items.length) throw new Error("The AI returned an empty quote. Add more detail and try again.");
+    render(data,cur);say("");
+    $("quote").scrollIntoView({behavior:"smooth"});
+  }catch(e){say("Could not generate the quote: "+(e.message||e),true)}
+  $("gen").disabled=false;
+}
+
+async function save(){
+  if(!current)return;
+  $("save").disabled=true;
+  const {error}=await sb.from("ai_quotes").insert({user_id:user.id,title:current.q.title||"Quote",currency:current.cur,total:current.total,data:current.q});
+  $("save").disabled=false;
+  if(error){say("Could not save: "+error.message,true);return}
+  say("Quote saved.");loadList();
+}
+
+async function loadList(){
+  const {data,error}=await sb.from("ai_quotes").select("id,title,currency,total,created_at,data").order("created_at",{ascending:false}).limit(20);
+  if(error){$("list").innerHTML=`<p style="color:var(--mute)">Saved quotes are not available yet. Run the SQL step first.</p>`;return}
+  window._saved=data;
+  $("list").innerHTML=data.length?data.map((r,i)=>`<div class="hist"><a href="#" data-i="${i}" style="color:var(--text)">${esc(r.title)}</a><span>${money(r.total,r.currency)}</span></div>`).join(""):`<p style="color:var(--mute)">No saved quotes yet. Generate one and press Save quote.</p>`;
+}
+
+$("gen").onclick=generate;
+$("save").onclick=save;
+$("print").onclick=()=>window.print();
+$("list").onclick=e=>{const a=e.target.closest("a[data-i]");if(!a)return;e.preventDefault();const r=window._saved[+a.dataset.i];render(r.data,r.currency);$("quote").scrollIntoView({behavior:"smooth"})};
+
+(async()=>{
+  const {data}=await sb.auth.getSession();
+  if(!data.session){$("gate").classList.remove("hidden");$("form").classList.add("hidden");$("history").classList.add("hidden");return}
+  user=data.session.user;loadList();
+})();
+</script>
+</body>
+</html>
