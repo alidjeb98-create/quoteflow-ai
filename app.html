@@ -211,7 +211,27 @@ function showQuote(){
   $("#sv").onclick=async()=>{quotes.unshift({title:q.title,client:q.client,total:q.total});last=null;$("#out").innerHTML="";$("#desc").value="";await persist();render()};
 }
 currentUser().then(u=>setUser(u));
-render();
+render();$("#gen").onclick=async()=>{
+  const d=$("#desc").value.trim();if(!d)return;
+  const b=$("#gen");b.disabled=true;$("#out").innerHTML='<p class="mut">…</p>';
+  try{
+    const u=await currentUser();if(!u)throw new Error("Please log in again");
+    const r=await fetch(SB_URL+"/functions/v1/hyper-endpoint",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+session.access_token},body:JSON.stringify({description:d,currency:"USD",language:lang,trade:""})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!Array.isArray(j.items))throw new Error(j.error||j.message||("HTTP "+r.status));
+    const items=j.items.map(i=>({description:String(i.description||""),quantity:+i.quantity||0,unit:String(i.unit||""),unit_price:+i.unit_price||0}));
+    const sub=items.reduce((s,i)=>s+i.quantity*i.unit_price,0),rate=(+$("#tax").value||0)/100,ci=$("#qclient").value;
+    last={title:String(j.title||d).slice(0,60),client:ci===""?"":clients[ci].n,items,notes:j.notes||"",sub,tax:sub*rate,total:sub*(1+rate)};
+    showQuote();
+  }catch(e){$("#out").innerHTML='<p class="mut">⚠ '+esc(e.message)+'</p>'}
+  b.disabled=false;
+};
+showQuote=function(){
+  const q=last;if(!q)return;
+  const rows=q.items.map(i=>`<tr><td>${esc(i.description)} <span class="mut">(${i.quantity} ${esc(i.unit)} × ${money(i.unit_price)})</span></td><td>${money(i.quantity*i.unit_price)}</td></tr>`).join("");
+  $("#out").innerHTML=`<table>${rows}<tr><td>${t("sub2")}</td><td>${money(q.sub)}</td></tr><tr><td>${t("tax")}</td><td>${money(q.tax)}</td></tr><tr><td class="tot">${t("total")}</td><td class="tot">${money(q.total)}</td></tr></table><p class="mut">${esc(q.notes)}</p><p><button class="p" id="sv">${t("save")}</button></p>`;
+  $("#sv").onclick=async()=>{quotes.unshift({title:q.title,client:q.client,total:q.total});last=null;$("#out").innerHTML="";$("#desc").value="";await persist();render()};
+}; 
 </script>
 </body>
 </html>
