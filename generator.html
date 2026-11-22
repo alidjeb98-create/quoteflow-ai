@@ -104,7 +104,7 @@ async function generate(){
   $("gen").disabled=true;say("Generating your quote…");
   try{
     const cur=$("cur").value;
-    const {data,error}=await sb.functions.invoke("generate-quote",{body:{description,currency:cur,language:$("lang").value}});
+    const {data,error}=await sb.functions.invoke("hyper-endpoint",{body:{description,currency:cur,language:$("lang").value}});
     if(error) throw error;
     if(!data||!Array.isArray(data.items)||!data.items.length) throw new Error("The AI returned an empty quote. Add more detail and try again.");
     render(data,cur);say("");
